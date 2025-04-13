@@ -1,5 +1,5 @@
 /***************************************************
- * CS460: Programming Assignment 4: Test Program 3 *
+ * CS460: Programming Assignment 5: Test Program 3 *
  ***************************************************/
 
 char announcement[2048];

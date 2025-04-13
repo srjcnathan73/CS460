@@ -20,11 +20,11 @@ RDParser::RDParser(std::vector<char> *fileBuffer, std::string fileName)
 
 void RDParser::createCST()
 {
-    root = new CSTNode(headTokenizer);
-    int currentLineNumber=root->lineNumber();
+    rootCST = new CSTNode(headTokenizer);
+    int currentLineNumber=rootCST->lineNumber();
     int parenCounter=0;
-    auto tempNode = root;
-    auto newNode = root;
+    auto tempNode = rootCST;
+    auto newNode = rootCST;
     previous = headTokenizer;
     for(auto cur = headTokenizer->next(); cur; cur = cur->next() )
     {
@@ -78,10 +78,10 @@ void RDParser::createCST()
         previous = cur;
     }
     lastLine=currentLineNumber;
-    SymbolTable SymbolTable(root);
+    SymbolTable SymbolTable(rootCST);
     SymbolTable.createSymbolTable();
-    SymbolTable.print();
-    SymbolTable.outputToFile(_fileName);
+    //SymbolTable.print();
+    //SymbolTable.outputToFile(_fileName);
 }
 
 bool RDParser::checkForReservedWords(const std::string& word)
@@ -104,33 +104,10 @@ bool RDParser::checkIsOperator(const std::string& type)
     return type == "MODULO"||type == "ASTERISK"||type == "PLUS"||type == "MINUS"||type == "DIVIDE"||type == "CARET"||type == "LT"||type == "GT"||type == "BOOLEAN_NOT";
 }
 
-void RDParser::printCSTUtility(CSTNode* node)
-{
-    if(node == nullptr){
-        return;
-    }
-    std::cout << "Token type: " << node->type() << std::endl;
-    std::cout << "Token value: " << node->value() << std::endl;
-    std::cout << "line count: " << node->lineNumber() << std::endl;
-    std::cout << std::endl;
-    if(node->leftChild() != nullptr)
-    {
-        printCSTUtility(node->leftChild());
-    }else
-    {
-        printCSTUtility(node->rightSibling());
-    }
-}
-
-void RDParser::printCST()
-{
-    printCSTUtility(root);
-}
-
 void RDParser::breadthFirstPrint() {
-    if (!root) return;
+    if (!rootCST) return;
     std::queue<CSTNode*> queue;
-    queue.push(root);
+    queue.push(rootCST);
     int nullCount = 0;
     int spaceCount = 0;
     int changeWidthSpaceCount = 0;
@@ -210,9 +187,9 @@ void RDParser::breadthFirstFilePrint(std::string inputFileName) {
     std::ofstream resultsDataFile;
     resultsDataFile.open (newFileName);
 
-    if (!root) return;
+    if (!rootCST) return;
     std::queue<CSTNode*> queue;
-    queue.push(root);
+    queue.push(rootCST);
     int nullCount = 0;
     int spaceCount = 0;
     int valueSize = 0;

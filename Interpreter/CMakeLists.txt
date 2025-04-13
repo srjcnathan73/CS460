@@ -13,10 +13,11 @@ add_executable(Interpreter main.cpp
         Tokenizer.hpp
         RDParser.cpp
         RDParser.hpp
-        CSTNode.cpp
         CSTNode.hpp
         STNode.hpp
         STNode.cpp
         SymbolTable.cpp
         SymbolTable.hpp
+        ASTNode.cpp
+        ASTNode.hpp
 )

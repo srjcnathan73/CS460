@@ -1,5 +1,5 @@
 /***************************************************
- * CS460: Programming Assignment 4: Test Program 4 *
+ * CS460: Programming Assignment 5: Test Program 4 *
  ***************************************************/
 
 char my_string[1024];
