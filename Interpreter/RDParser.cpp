@@ -1,0 +1,279 @@
+//
+// Created by Nwseb on 2/24/2025.
+//
+#include <iostream>
+#include <queue>
+#include <iomanip>
+#include <cstring>
+#include "RDParser.hpp"
+#include "Tokenizer.hpp"
+#include "Constants.hpp"
+
+RDParser::RDParser(std::vector<char> *fileBuffer, std::string fileName)
+{
+    Tokenizer tokenizer(fileBuffer);
+    tokenizer.createTokens();
+    headTokenizer = tokenizer.getHeadOfTokenList();
+    _fileName = fileName;
+    //tokenizer.print();
+}
+
+void RDParser::createCST()
+{
+    root = new CSTNode(headTokenizer);
+    int currentLineNumber=root->lineNumber();
+    int parenCounter=0;
+    auto tempNode = root;
+    auto newNode = root;
+    previous = headTokenizer;
+    for(auto cur = headTokenizer->next(); cur; cur = cur->next() )
+    {
+        if(previous->tokenType() == "IDENTIFIER" && checkForReservedWords(previous->tokenValue())
+        && cur->tokenType() == "IDENTIFIER" && checkForReservedWords(cur->tokenValue()) && cur->next()->tokenValue() == "(")
+        {
+            std::cerr << errorMessages[E_SYNTAX_ERROR] << cur->lineNumber() << ": reserved word \"" << cur->tokenValue() << "\" can not be used for the name of a function." << std::endl;
+            exit(E_SYNTAX_ERROR);
+        }
+        if(previous->tokenType() == "IDENTIFIER" && checkForReservedWords(previous->tokenValue())
+        && cur->tokenType() == "IDENTIFIER" && checkForReservedWords(cur->tokenValue()) && (cur->next()->tokenValue() == ";" || cur->next()->tokenValue() == "=" || cur->next()->tokenValue() == ")"))
+        {
+            std::cerr << errorMessages[E_SYNTAX_ERROR] << cur->lineNumber() << ": reserved word \"" << cur->tokenValue() << "\" can not be used for the name of a variable." << std::endl;
+            exit(E_SYNTAX_ERROR);
+        }
+        if(previous->tokenType() == "L_BRACKET" && cur->tokenType() == "INTEGER" && checkForNegativeInteger(cur->tokenValue()) && cur->next()->tokenType() == "R_BRACKET" )
+        {
+            std::cerr << errorMessages[E_SYNTAX_ERROR] << cur->lineNumber() << ": array declaration size must be a positive integer." << std::endl;
+            exit(E_SYNTAX_ERROR);
+        }
+        if(previous->tokenType() == "DOUBLE_QUOTE" && cur->tokenType() == "STRING" && cur->next()->tokenType() != "DOUBLE_QUOTE" )
+        {
+            std::cerr << errorMessages[E_SYNTAX_ERROR] << cur->lineNumber() << ": unterminated string quote." << std::endl;
+            exit(E_SYNTAX_ERROR);
+        }
+        if(cur->tokenType() == "L_PAREN")
+        {
+            parenCounter++;
+        }
+        if(cur->tokenType() == "R_PAREN")
+        {
+            parenCounter--;
+        }
+
+        if(cur->lineNumber() != currentLineNumber)
+        {
+            currentLineNumber = cur->lineNumber();
+        }
+        if((previous->tokenType() == "SEMICOLON" && parenCounter == 0) || previous->tokenType() == "R_BRACE" || previous->tokenType() == "L_BRACE" || cur->tokenType() == "L_BRACE" || (previous->tokenType() == "R_PAREN" && cur->tokenType() != "SEMICOLON" && cur->tokenType() != "R_PAREN" && !checkIsOperator(cur->tokenType()) && parenCounter == 0))
+        {
+            newNode = new CSTNode(cur);
+            tempNode->leftChild(newNode);
+            tempNode = newNode;
+        }
+        else
+        {
+            newNode = new CSTNode(cur);
+            tempNode->rightSibling(newNode);
+            tempNode = newNode;
+        }
+        previous = cur;
+    }
+    lastLine=currentLineNumber;
+    SymbolTable SymbolTable(root);
+    SymbolTable.createSymbolTable();
+    SymbolTable.print();
+    SymbolTable.outputToFile(_fileName);
+}
+
+bool RDParser::checkForReservedWords(const std::string& word)
+{
+    for(size_t i=0; i < _reservedWords->size(); i++){
+        if(word == _reservedWords->at(i))
+            return true;
+    }
+    return false;
+}
+
+bool RDParser::checkForNegativeInteger(const std::string& num)
+{
+    int int_num = std::stoi(num);
+    return int_num < 0;
+}
+
+bool RDParser::checkIsOperator(const std::string& type)
+{
+    return type == "MODULO"||type == "ASTERISK"||type == "PLUS"||type == "MINUS"||type == "DIVIDE"||type == "CARET"||type == "LT"||type == "GT"||type == "BOOLEAN_NOT";
+}
+
+void RDParser::printCSTUtility(CSTNode* node)
+{
+    if(node == nullptr){
+        return;
+    }
+    std::cout << "Token type: " << node->type() << std::endl;
+    std::cout << "Token value: " << node->value() << std::endl;
+    std::cout << "line count: " << node->lineNumber() << std::endl;
+    std::cout << std::endl;
+    if(node->leftChild() != nullptr)
+    {
+        printCSTUtility(node->leftChild());
+    }else
+    {
+        printCSTUtility(node->rightSibling());
+    }
+}
+
+void RDParser::printCST()
+{
+    printCSTUtility(root);
+}
+
+void RDParser::breadthFirstPrint() {
+    if (!root) return;
+    std::queue<CSTNode*> queue;
+    queue.push(root);
+    int nullCount = 0;
+    int spaceCount = 0;
+    int changeWidthSpaceCount = 0;
+    int changeWidthNullCount = 0;
+    int levelCount = 1;
+    int columnWidth = 25;
+    int NewColumnWidth = 25;
+    while (!queue.empty()) {
+        CSTNode* current = queue.front();
+        queue.pop();
+        if(current->value().size() > columnWidth)
+        {
+            NewColumnWidth = static_cast<int>(current->value().size());
+            changeWidthSpaceCount = spaceCount;
+            changeWidthNullCount = nullCount;
+            std::cout << std::setw(NewColumnWidth) << current->value();
+        }
+        else{
+            std::cout  << std::setw(NewColumnWidth) << current->value();
+        }
+        if (current->leftChild()) {
+            std::cout << std::setw(NewColumnWidth) << "null" << std::endl;
+            levelCount++;
+            if(spaceCount > 0)
+            {
+                for(int i=0; i<spaceCount; i++)
+                {
+                    if(i<changeWidthSpaceCount)
+                    {
+                        std::cout << std::setw(columnWidth) << " ";
+                    }else
+                    {
+                        std::cout << std::setw(NewColumnWidth) << " ";
+                    }
+                }
+            }
+
+            for(int i=0; i<nullCount; i++)
+            {
+                if(i<changeWidthNullCount)
+                {
+                    std::cout << std::setw(columnWidth) << "null";
+                }else
+                {
+                    std::cout << std::setw(NewColumnWidth) << "null";
+                }
+            }
+            queue.push(current->leftChild());
+            spaceCount += nullCount;
+            nullCount=0;
+        }
+        if (current->rightSibling())
+        {
+            queue.push(current->rightSibling());
+            nullCount++;
+        }
+    }
+    std::cout << std::setw(columnWidth) << "null" << std::endl;
+    for(int i=0; i<spaceCount; i++)
+        std::cout << std::setw(columnWidth) << " ";
+    std::cout << std::setw(columnWidth) << "null" << std::endl;
+}
+
+void RDParser::breadthFirstFilePrint(std::string inputFileName) {
+    std::string str2 = inputFileName.substr (6,inputFileName.size());
+    char *addStart = (char*)"Output/output-";
+    const char *copy = str2.c_str();
+    char newCopy[strlen(copy)];
+    std::strcpy(newCopy, copy);
+    newCopy[strlen(newCopy)-2] = '\0';
+    char *addEnding = (char*)".txt";
+    const unsigned int newWordSize = 120;
+    char newFileName[newWordSize];
+    std::strcpy(newFileName, addStart);
+    std::strcat(newFileName, newCopy);
+    std::strcat(newFileName, addEnding);
+    std::ofstream resultsDataFile;
+    resultsDataFile.open (newFileName);
+
+    if (!root) return;
+    std::queue<CSTNode*> queue;
+    queue.push(root);
+    int nullCount = 0;
+    int spaceCount = 0;
+    int valueSize = 0;
+    int changeWidthSpaceCount = 0;
+    int changeWidthNullCount = 0;
+    int levelCount = 1;
+    int columnWidth = 25;
+    int NewColumnWidth = 25;
+    while (!queue.empty()) {
+        CSTNode* current = queue.front();
+        queue.pop();
+        valueSize = static_cast<int>(current->value().size());
+        if(valueSize > NewColumnWidth)
+        {
+            changeWidthSpaceCount = spaceCount;
+            changeWidthNullCount = nullCount;
+            NewColumnWidth = valueSize;
+            resultsDataFile  << std::setw(NewColumnWidth) << current->value();
+        }
+        else{
+            resultsDataFile  << std::setw(NewColumnWidth) << current->value();
+        }
+        if (current->leftChild()) {
+            if(columnWidth < NewColumnWidth)
+            {
+                resultsDataFile << std::setw(NewColumnWidth) << "null" << std::endl;
+            }
+            else
+            {
+                resultsDataFile << std::setw(columnWidth) << "null" << std::endl;
+            }
+            levelCount++;
+            if(spaceCount > 0)
+            {
+                for(int i=0; i<changeWidthSpaceCount; i++)
+                    resultsDataFile << std::setw(columnWidth) << " ";
+                for(int j=changeWidthSpaceCount; j<spaceCount; j++)
+                    resultsDataFile << std::setw(NewColumnWidth) << " ";
+
+            }
+
+            for(int i=0; i<changeWidthNullCount; i++)
+                resultsDataFile << std::setw(columnWidth) << "null";
+            for(int i=changeWidthNullCount; i<nullCount; i++)
+                resultsDataFile << std::setw(NewColumnWidth) << "null";
+            queue.push(current->leftChild());
+            spaceCount += nullCount;
+            nullCount=0;
+        }
+        if (current->rightSibling())
+        {
+            queue.push(current->rightSibling());
+            nullCount++;
+        }
+    }
+    resultsDataFile << std::setw(NewColumnWidth) << "null" << std::endl;
+    for(int i=0; i<changeWidthSpaceCount-3; i++)
+        resultsDataFile << std::setw(columnWidth) << " ";
+    for(int j=changeWidthSpaceCount; j<spaceCount; j++)
+        resultsDataFile << std::setw(NewColumnWidth) << " ";
+    resultsDataFile << std::setw(NewColumnWidth) << "null" << std::endl;
+    resultsDataFile.close();
+}
+

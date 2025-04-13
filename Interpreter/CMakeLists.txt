@@ -11,8 +11,8 @@ add_executable(Interpreter main.cpp
         CommentRemover.hpp
         Tokenizer.cpp
         Tokenizer.hpp
-        RCParser.cpp
-        RCParser.hpp
+        RDParser.cpp
+        RDParser.hpp
         CSTNode.cpp
         CSTNode.hpp
         STNode.hpp

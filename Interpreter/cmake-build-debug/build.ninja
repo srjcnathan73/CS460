@@ -73,8 +73,8 @@ build CMakeFiles/Interpreter.dir/Tokenizer.cpp.obj: CXX_COMPILER__Interpreter_un
   OBJECT_DIR = CMakeFiles\Interpreter.dir
   OBJECT_FILE_DIR = CMakeFiles\Interpreter.dir
 
-build CMakeFiles/Interpreter.dir/RCParser.cpp.obj: CXX_COMPILER__Interpreter_unscanned_Debug C$:/Users/Nwseb/Documents/CS460/Interpreter/RCParser.cpp || cmake_object_order_depends_target_Interpreter
-  DEP_FILE = CMakeFiles\Interpreter.dir\RCParser.cpp.obj.d
+build CMakeFiles/Interpreter.dir/RDParser.cpp.obj: CXX_COMPILER__Interpreter_unscanned_Debug C$:/Users/Nwseb/Documents/CS460/Interpreter/RDParser.cpp || cmake_object_order_depends_target_Interpreter
+  DEP_FILE = CMakeFiles\Interpreter.dir\RDParser.cpp.obj.d
   FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\Interpreter.dir
   OBJECT_FILE_DIR = CMakeFiles\Interpreter.dir
@@ -105,7 +105,7 @@ build CMakeFiles/Interpreter.dir/SymbolTable.cpp.obj: CXX_COMPILER__Interpreter_
 #############################################
 # Link the executable Interpreter.exe
 
-build Interpreter.exe: CXX_EXECUTABLE_LINKER__Interpreter_Debug CMakeFiles/Interpreter.dir/main.cpp.obj CMakeFiles/Interpreter.dir/Token.cpp.obj CMakeFiles/Interpreter.dir/CommentRemover.cpp.obj CMakeFiles/Interpreter.dir/Tokenizer.cpp.obj CMakeFiles/Interpreter.dir/RCParser.cpp.obj CMakeFiles/Interpreter.dir/CSTNode.cpp.obj CMakeFiles/Interpreter.dir/STNode.cpp.obj CMakeFiles/Interpreter.dir/SymbolTable.cpp.obj
+build Interpreter.exe: CXX_EXECUTABLE_LINKER__Interpreter_Debug CMakeFiles/Interpreter.dir/main.cpp.obj CMakeFiles/Interpreter.dir/Token.cpp.obj CMakeFiles/Interpreter.dir/CommentRemover.cpp.obj CMakeFiles/Interpreter.dir/Tokenizer.cpp.obj CMakeFiles/Interpreter.dir/RDParser.cpp.obj CMakeFiles/Interpreter.dir/CSTNode.cpp.obj CMakeFiles/Interpreter.dir/STNode.cpp.obj CMakeFiles/Interpreter.dir/SymbolTable.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\Interpreter.dir

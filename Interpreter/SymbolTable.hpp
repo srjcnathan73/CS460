@@ -10,7 +10,7 @@
 #include <fstream>
 #include "CSTNode.hpp"
 #include "STNode.hpp"
-#include "RCParser.hpp"
+#include "RDParser.hpp"
 
 class SymbolTable {
 public:

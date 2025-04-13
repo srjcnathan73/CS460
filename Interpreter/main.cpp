@@ -3,7 +3,7 @@
 #include "Constants.hpp"
 #include "CommentRemover.hpp"
 #include "Tokenizer.hpp"
-#include "RCParser.hpp"
+#include "RDParser.hpp"
 
 
 void verifyReadableInputFile(char* fileName);
@@ -20,10 +20,10 @@ int main(int argc, char *argv[]) {
     commentRemover.removeComments();
     //commentRemover.printCommentFreeFile();
     std::vector<char>* fileBuffer = commentRemover.getFileBuffer();
-    RCParser RCParser(fileBuffer,argv[argc - 1]);
+    RDParser RCParser(fileBuffer, argv[argc - 1]);
     RCParser.createCST();
-    //RCParser.breadthFirstPrint();
-    //RCParser.breadthFirstFilePrint(argv[argc - 1]);
+    //RDParser.breadthFirstPrint();
+    //RDParser.breadthFirstFilePrint(argv[argc - 1]);
     return 0;
 }
 
