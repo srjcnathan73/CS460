@@ -17,20 +17,31 @@ class RDParser {
 public:
     RDParser(std::vector<char> *fileBuffer, std::string fileName);
     void createCST();
-    void breadthFirstPrint();
-    void breadthFirstFilePrint(std::string inputFileName);
+    void createAST();
+    void addASTLeaf(ASTNode* newEntry, bool rightSibling);
+    void breadthFirstCSTPrint();
+    void breadthFirstCSTFilePrint(std::string inputFileName);
     bool checkForReservedWords(const std::string& word);
+    bool checkIsDataType(const std::string& word);
     bool checkForNegativeInteger(const std::string& num);
     bool checkIsOperator(const std::string& type);
+    CSTNode* addVariableDeclaration(CSTNode* current);
+    CSTNode* addFunctionDeclaration(CSTNode* current);
+    CSTNode* addProcedureDeclaration(CSTNode* current);
     CSTNode* getRootOfCST(){return rootCST;};
 
 
 private:
     Token *headTokenizer, *previous;
     CSTNode *rootCST;
+    ASTNode *rootAST,*currentAST;
     int lastLine;
+    int currentScope = 0;
+    int scopeCount = 0;
     std::vector<std::string> reservedWords = {"char","int","procedure","function","printf","void"};
     std::vector<std::string>* _reservedWords = &reservedWords;
+    std::vector<std::string> dataTypes = {"char","int","bool"};
+    std::vector<std::string>* _dataTypes = &dataTypes;
     std::string _fileName;
 };
 

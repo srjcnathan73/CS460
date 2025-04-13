@@ -11,7 +11,7 @@
 
 class ASTNode {
 public:
-    ASTNode(CSTNode *cstNode): left(nullptr), right(nullptr), _token(cstNode->value()), _type(cstNode->type()), _lineNumber(cstNode->lineNumber()) {}
+    ASTNode(CSTNode *cstNode, std::string label, int scope): left(nullptr), right(nullptr), _token(cstNode->value()), _type(cstNode->type()), _label(label), _lineNumber(cstNode->lineNumber()), _scope(scope) {}
     ~ASTNode() {
         leftChild(nullptr);
         rightSibling(nullptr);
@@ -25,13 +25,17 @@ public:
 
     std::string& value() { return _token; }
     std::string& type() { return _type; }
+    std::string& label() { return _label; }
     int& lineNumber() { return _lineNumber; }
+    int& scope() { return _scope; }
 
 private:
     ASTNode *left, *right;
     std::string _token;
     std::string _type;
+    std::string _label;
     int _lineNumber;
+    int _scope;
 };
 
 

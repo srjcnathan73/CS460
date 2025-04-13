@@ -18,6 +18,5 @@ add_executable(Interpreter main.cpp
         STNode.cpp
         SymbolTable.cpp
         SymbolTable.hpp
-        ASTNode.cpp
         ASTNode.hpp
 )
