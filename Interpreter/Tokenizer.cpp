@@ -116,7 +116,7 @@ void Tokenizer::createDoubleCharToken(char c, char d) {
     {
         if(c == '=')
         {
-            currentTokenType = "<BOOLEAN_EQUAL>";
+            currentTokenType = "BOOLEAN_EQUAL";
         }
         else if(c== '<')
         {

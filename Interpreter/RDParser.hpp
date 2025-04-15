@@ -20,7 +20,9 @@ public:
     void createAST();
     void addASTLeaf(ASTNode* newEntry, bool rightSibling);
     void breadthFirstCSTPrint();
+    void breadthFirstASTPrint();
     void breadthFirstCSTFilePrint(std::string inputFileName);
+    void breadthFirstASTFilePrint(std::string inputFileName);
     bool checkForReservedWords(const std::string& word);
     bool checkIsDataType(const std::string& word);
     bool checkForNegativeInteger(const std::string& num);
@@ -28,6 +30,11 @@ public:
     CSTNode* addVariableDeclaration(CSTNode* current);
     CSTNode* addFunctionDeclaration(CSTNode* current);
     CSTNode* addProcedureDeclaration(CSTNode* current);
+    CSTNode* addForLoopExpressions(CSTNode* current);
+    CSTNode* addWhileOrIfExpression(CSTNode* current);
+    CSTNode* createBoolExprPostfix(CSTNode* current);
+    CSTNode* createIntExprPostfix(CSTNode* current);
+    STNode* determineSTNode(CSTNode* current);
     CSTNode* getRootOfCST(){return rootCST;};
 
 
@@ -35,10 +42,12 @@ private:
     Token *headTokenizer, *previous;
     CSTNode *rootCST;
     ASTNode *rootAST,*currentAST;
+    STNode *rootST,*currentST;
     int lastLine;
     int currentScope = 0;
     int scopeCount = 0;
-    std::vector<std::string> reservedWords = {"char","int","procedure","function","printf","void"};
+    int forExpCount = 0;
+    std::vector<std::string> reservedWords = {"char","int","procedure","function","printf","void","for","while","if","else"};
     std::vector<std::string>* _reservedWords = &reservedWords;
     std::vector<std::string> dataTypes = {"char","int","bool"};
     std::vector<std::string>* _dataTypes = &dataTypes;
