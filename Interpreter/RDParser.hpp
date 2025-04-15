@@ -31,6 +31,8 @@ public:
     CSTNode* addFunctionDeclaration(CSTNode* current);
     CSTNode* addProcedureDeclaration(CSTNode* current);
     CSTNode* addForLoopExpressions(CSTNode* current);
+    CSTNode* addAssignment(CSTNode* current);
+    CSTNode* addReturnOrPrintF(CSTNode* current);
     CSTNode* addWhileOrIfExpression(CSTNode* current);
     CSTNode* createBoolExprPostfix(CSTNode* current);
     CSTNode* createIntExprPostfix(CSTNode* current);
@@ -47,7 +49,7 @@ private:
     int currentScope = 0;
     int scopeCount = 0;
     int forExpCount = 0;
-    std::vector<std::string> reservedWords = {"char","int","procedure","function","printf","void","for","while","if","else"};
+    std::vector<std::string> reservedWords = {"char","int","procedure","function","printf","void","for","while","if","else","return"};
     std::vector<std::string>* _reservedWords = &reservedWords;
     std::vector<std::string> dataTypes = {"char","int","bool"};
     std::vector<std::string>* _dataTypes = &dataTypes;

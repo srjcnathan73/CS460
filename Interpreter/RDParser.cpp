@@ -83,7 +83,7 @@ void RDParser::createCST()
     symbolTable.createSymbolTable();
     rootST = currentST = symbolTable.getHeadOfSymbolTable();
     createAST();
-    breadthFirstASTPrint();
+    //breadthFirstASTPrint();
     breadthFirstASTFilePrint(_fileName);
     //breadthFirstCSTFilePrint(_fileName);
     //symbolTable.print();
@@ -155,6 +155,19 @@ void RDParser::createAST()
                 else if (current->value() == "while"||current->value() == "if")
                 {
                     current = addWhileOrIfExpression(current);
+                    queue.pop();
+                }
+                else if (current->value() == "printf"||current->value() == "return")
+                {
+                    current = addReturnOrPrintF(current);
+                    queue.pop();
+                }
+            }
+            else if (current->type() == "IDENTIFIER")
+            {
+                if (current->value() != "printf")
+                {
+                    current = addAssignment(current);
                     queue.pop();
                 }
             }
@@ -343,6 +356,69 @@ CSTNode* RDParser::addForLoopExpressions(CSTNode* current)
     astEntry = new ASTNode(currentTemp, foundST, label, currentScope);
     addASTLeaf(astEntry,false);
     currentTemp = createIntExprPostfix(currentTemp);
+    return currentTemp;
+}
+
+CSTNode* RDParser::addAssignment(CSTNode* current)
+{
+    CSTNode* currentTemp = current;
+    std::string label = "ASSIGNMENT";
+    STNode* foundST = determineSTNode(currentTemp);
+    if(foundST == nullptr)
+    {
+        std::cerr << errorMessages[E_SYNTAX_ERROR] << currentTemp->lineNumber() << ": undeclared variable, procedure or function." << std::endl;
+        exit(E_SYNTAX_ERROR);
+    }
+    auto *astEntry = new ASTNode(currentTemp, foundST, label, currentScope);
+    addASTLeaf(astEntry,false);
+    if(foundST->variableDataType() == "int")
+    {
+        currentTemp = createIntExprPostfix(currentTemp);
+    }
+    else if(foundST->variableDataType() == "bool")
+    {
+        currentTemp = createBoolExprPostfix(currentTemp);
+    }
+    else if(foundST->variableDataType() == "char")
+    {
+        astEntry = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
+        addASTLeaf(astEntry,true);
+        currentTemp = currentTemp->rightSibling();
+        auto *astAssignmentOp = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
+        currentTemp = currentTemp->rightSibling();
+        while(currentTemp->type() != "SEMICOLON"){
+            astEntry = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
+            addASTLeaf(astEntry,true);
+            currentTemp = currentTemp->rightSibling();
+        }
+        addASTLeaf(astAssignmentOp,true);
+    }
+    return currentTemp;
+}
+
+
+CSTNode* RDParser::addReturnOrPrintF(CSTNode *current)
+{
+    CSTNode* currentTemp = current;
+    std::string label = "PRINTF";
+    if (currentTemp->value() == "return")
+    {
+        label = "RETURN";
+    }
+    auto *astEntry = new ASTNode(currentTemp, nullptr, label, currentScope);
+    addASTLeaf(astEntry,false);
+    currentTemp = currentTemp->rightSibling();
+    STNode* foundST;
+    while(currentTemp->type() != "SEMICOLON")
+    {
+        if (currentTemp->type() != "L_PAREN" && currentTemp->type() != "R_PAREN" && currentTemp->type() != "COMMA" && currentTemp->type() != "DOUBLE_QUOTE")
+        {
+            foundST = determineSTNode(currentTemp);
+            astEntry = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
+            addASTLeaf(astEntry,true);
+        }
+        currentTemp = currentTemp->rightSibling();
+    }
     return currentTemp;
 }
 
@@ -798,7 +874,7 @@ STNode* RDParser::determineSTNode(CSTNode* current)
 {
     for(auto cur = rootST; cur; cur = cur->next() )
     {
-        if(cur->identifierName() == current->value() && cur->identifierType() == current->type() && cur->scope() == currentScope)
+        if(cur->identifierName() == current->value() && cur->scope() == currentScope)
             return cur;
     }
     return nullptr;
@@ -963,8 +1039,8 @@ void RDParser::breadthFirstASTFilePrint(std::string inputFileName) {
     int changeWidthSpaceCount = 0;
     int changeWidthNullCount = 0;
     int levelCount = 1;
-    int columnWidth = 25;
-    int NewColumnWidth = 25;
+    int columnWidth = 26;
+    int NewColumnWidth = 26;
     while (!queue.empty()) {
         ASTNode* current = queue.front();
         queue.pop();
@@ -973,7 +1049,7 @@ void RDParser::breadthFirstASTFilePrint(std::string inputFileName) {
         {
             changeWidthSpaceCount = spaceCount;
             changeWidthNullCount = nullCount;
-            NewColumnWidth = valueSize;
+            NewColumnWidth = valueSize+1;
             resultsDataFile  << std::setw(NewColumnWidth) << current->label();
         }
         else{
@@ -1056,7 +1132,7 @@ void RDParser::breadthFirstCSTFilePrint(std::string inputFileName) {
         {
             changeWidthSpaceCount = spaceCount;
             changeWidthNullCount = nullCount;
-            NewColumnWidth = valueSize;
+            NewColumnWidth = valueSize+1;
             resultsDataFile  << std::setw(NewColumnWidth) << current->value();
         }
         else{
