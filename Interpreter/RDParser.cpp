@@ -163,9 +163,14 @@ void RDParser::createAST()
                     queue.pop();
                 }
             }
+            else if (current->type() == "IDENTIFIER" && current->rightSibling()->type() == "L_PAREN")
+            {
+                current = addFunctionCall(current);
+                queue.pop();
+            }
             else if (current->type() == "IDENTIFIER")
             {
-                if (current->value() != "printf")
+                if (current->value() != "printf" && current->rightSibling()->type() != "L_PAREN")
                 {
                     current = addAssignment(current);
                     queue.pop();
@@ -377,13 +382,26 @@ CSTNode* RDParser::addAssignment(CSTNode* current)
     }
     else if(foundST->variableDataType() == "bool")
     {
+        currentTemp = currentTemp->rightSibling();
+        auto *astAssignmentOp = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
+        currentTemp = currentTemp->rightSibling();
         currentTemp = createBoolExprPostfix(currentTemp);
+        addASTLeaf(astAssignmentOp,true);
     }
     else if(foundST->variableDataType() == "char")
     {
         astEntry = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
         addASTLeaf(astEntry,true);
         currentTemp = currentTemp->rightSibling();
+        if(currentTemp->type()=="L_BRACKET")
+        {
+            for(size_t i=0;i<3;i++)
+            {
+                astEntry = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
+                addASTLeaf(astEntry,true);
+                currentTemp = currentTemp->rightSibling();
+            }
+        }
         auto *astAssignmentOp = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
         currentTemp = currentTemp->rightSibling();
         while(currentTemp->type() != "SEMICOLON"){
@@ -409,6 +427,28 @@ CSTNode* RDParser::addReturnOrPrintF(CSTNode *current)
     addASTLeaf(astEntry,false);
     currentTemp = currentTemp->rightSibling();
     STNode* foundST;
+    while(currentTemp->type() != "SEMICOLON")
+    {
+        if (currentTemp->type() != "L_PAREN" && currentTemp->type() != "R_PAREN" && currentTemp->type() != "COMMA" && currentTemp->type() != "DOUBLE_QUOTE")
+        {
+            foundST = determineSTNode(currentTemp);
+            astEntry = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
+            addASTLeaf(astEntry,true);
+        }
+        currentTemp = currentTemp->rightSibling();
+    }
+    return currentTemp;
+}
+
+
+CSTNode* RDParser::addFunctionCall(CSTNode *current)
+{
+    CSTNode* currentTemp = current;
+    std::string label = "CALL";
+    STNode* foundST = determineSTNode(currentTemp);
+    auto *astEntry = new ASTNode(currentTemp, foundST, label, currentScope);
+    addASTLeaf(astEntry,false);
+    currentTemp = currentTemp->rightSibling();
     while(currentTemp->type() != "SEMICOLON")
     {
         if (currentTemp->type() != "L_PAREN" && currentTemp->type() != "R_PAREN" && currentTemp->type() != "COMMA" && currentTemp->type() != "DOUBLE_QUOTE")
@@ -874,7 +914,7 @@ STNode* RDParser::determineSTNode(CSTNode* current)
 {
     for(auto cur = rootST; cur; cur = cur->next() )
     {
-        if(cur->identifierName() == current->value() && cur->scope() == currentScope)
+        if((cur->identifierName() == current->value() && cur->scope() == currentScope)||(cur->identifierName() == current->value() && cur->scope() == 0)||(cur->identifierName() == current->value() && (cur->identifierType() == "function"||cur->identifierType() == "procedure")))
             return cur;
     }
     return nullptr;
