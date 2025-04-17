@@ -17,6 +17,16 @@ RDParser::RDParser(std::vector<char> *fileBuffer, std::string fileName)
     headTokenizer = tokenizer.getHeadOfTokenList();
     _fileName = fileName;
     //tokenizer.print();
+    createCST();
+    SymbolTable symbolTable(rootCST);
+    symbolTable.createSymbolTable();
+    rootST = currentST = symbolTable.getHeadOfSymbolTable();
+    createAST();
+    //breadthFirstASTPrint();
+    breadthFirstASTFilePrint(_fileName);
+    //breadthFirstCSTFilePrint(_fileName);
+    //symbolTable.print();
+    //SymbolTable.outputToFile(_fileName);
 }
 
 void RDParser::createCST()
@@ -79,15 +89,6 @@ void RDParser::createCST()
         previous = cur;
     }
     lastLine=currentLineNumber;
-    SymbolTable symbolTable(rootCST);
-    symbolTable.createSymbolTable();
-    rootST = currentST = symbolTable.getHeadOfSymbolTable();
-    createAST();
-    //breadthFirstASTPrint();
-    breadthFirstASTFilePrint(_fileName);
-    //breadthFirstCSTFilePrint(_fileName);
-    //symbolTable.print();
-    //SymbolTable.outputToFile(_fileName);
 }
 
 void RDParser::createAST()
