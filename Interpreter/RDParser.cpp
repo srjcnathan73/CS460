@@ -449,10 +449,9 @@ CSTNode* RDParser::addFunctionCall(CSTNode *current)
     STNode* foundST = determineSTNode(currentTemp);
     auto *astEntry = new ASTNode(currentTemp, foundST, label, currentScope);
     addASTLeaf(astEntry,false);
-    currentTemp = currentTemp->rightSibling();
     while(currentTemp->type() != "SEMICOLON")
     {
-        if (currentTemp->type() != "L_PAREN" && currentTemp->type() != "R_PAREN" && currentTemp->type() != "COMMA" && currentTemp->type() != "DOUBLE_QUOTE")
+        if (currentTemp->type() != "COMMA" && currentTemp->type() != "DOUBLE_QUOTE")
         {
             foundST = determineSTNode(currentTemp);
             astEntry = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
