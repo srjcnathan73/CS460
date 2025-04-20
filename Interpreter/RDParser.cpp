@@ -767,7 +767,7 @@ CSTNode* RDParser::createIntExprPostfix(CSTNode* current)
     bool finished;
     while(currentTemp->type() != "SEMICOLON" && currentTemp->rightSibling())
     {
-        if ((currentTemp->type() == "INTEGER") || (currentTemp->type() == "IDENTIFIER") || (currentTemp->type() == "SINGLE_QUOTE") || (currentTemp->type() == "DOUBLE_QUOTE") || (currentTemp->type() == "STRING"))
+        if ((currentTemp->type() == "INTEGER") || (currentTemp->type() == "IDENTIFIER") || (currentTemp->type() == "SINGLE_QUOTE") || (currentTemp->type() == "DOUBLE_QUOTE") || (currentTemp->type() == "STRING") || (currentTemp->type() == "L_BRACKET") || (currentTemp->type() == "R_BRACKET"))
         {
             if(currentTemp->type() == "IDENTIFIER")
                 foundST = determineSTNode(currentTemp);
