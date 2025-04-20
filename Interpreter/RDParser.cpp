@@ -383,9 +383,7 @@ CSTNode* RDParser::addAssignment(CSTNode* current)
     }
     else if(foundST->variableDataType() == "bool")
     {
-        currentTemp = currentTemp->rightSibling();
-        auto *astAssignmentOp = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
-        currentTemp = currentTemp->rightSibling();
+        auto *astAssignmentOp = new ASTNode(currentTemp->rightSibling(), foundST, currentTemp->rightSibling()->value(), currentScope);
         currentTemp = createBoolExprPostfix(currentTemp);
         addASTLeaf(astAssignmentOp,true);
     }
