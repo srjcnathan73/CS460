@@ -1127,7 +1127,7 @@ void RDParser::breadthFirstASTFilePrint(std::string inputFileName) {
         }
     }
     resultsDataFile << std::setw(NewColumnWidth) << "null" << std::endl;
-    for(int i=0; i<changeWidthSpaceCount-3; i++)
+    for(int i=0; i<changeWidthSpaceCount-1; i++)
         resultsDataFile << std::setw(columnWidth) << " ";
     for(int j=changeWidthSpaceCount; j<spaceCount; j++)
         resultsDataFile << std::setw(NewColumnWidth) << " ";
