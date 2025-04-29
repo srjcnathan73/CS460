@@ -7,21 +7,26 @@
 #include <iomanip>
 #include <cstring>
 #include "RDParser.hpp"
+#include "Execute.hpp"
 #include "Tokenizer.hpp"
 #include "Constants.hpp"
 
-RDParser::RDParser(std::vector<char> *fileBuffer, std::string fileName)
+RDParser::RDParser(std::vector<char> *fileBuffer, std::string *fileName)
 {
     Tokenizer tokenizer(fileBuffer);
     tokenizer.createTokens();
     headTokenizer = tokenizer.getHeadOfTokenList();
-    _fileName = fileName;
+    previous = nullptr;
+    rootCST = nullptr;
+    rootAST = currentAST = nullptr;
+    _fileName = *fileName;
     //tokenizer.print();
     createCST();
     SymbolTable symbolTable(rootCST);
     symbolTable.createSymbolTable();
     rootST = currentST = symbolTable.getHeadOfSymbolTable();
     createAST();
+    Execute execute(rootAST,rootST,&_fileName);
     //breadthFirstASTPrint();
     breadthFirstASTFilePrint(_fileName);
     //breadthFirstCSTFilePrint(_fileName);
@@ -323,8 +328,6 @@ CSTNode* RDParser::addProcedureDeclaration(CSTNode* current)
     std::string label = "DECLARATION";
     std::string varDataType = "N/A";
     std::string varValue;
-    currentTemp = currentTemp->rightSibling();
-    idName = currentTemp->value();
     currentTemp = currentTemp->rightSibling();
 
     auto *astEntry = new ASTNode(currentTemp, currentST, label, currentScope);

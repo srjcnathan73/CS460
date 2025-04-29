@@ -15,7 +15,7 @@
 
 class RDParser {
 public:
-    RDParser(std::vector<char> *fileBuffer, std::string fileName);
+    RDParser(std::vector<char> *fileBuffer, std::string *fileName);
     void createCST();
     void createAST();
     void addASTLeaf(ASTNode* newEntry, bool rightSibling);
@@ -46,7 +46,7 @@ private:
     CSTNode *rootCST;
     ASTNode *rootAST,*currentAST;
     STNode *rootST,*currentST;
-    int lastLine;
+    int lastLine = 0;
     int currentScope = 0;
     int scopeCount = 0;
     int forExpCount = 0;

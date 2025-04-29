@@ -20,6 +20,7 @@ public:
     bool variableIsArray();
     int variableArraySize();
     std::string variableValue();
+    void setVariableValue(std::string *val);
     int scope();
 
 private:

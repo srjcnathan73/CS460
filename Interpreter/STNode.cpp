@@ -31,6 +31,10 @@ std::string STNode::variableValue() {
     return _variableValue;
 }
 
+void STNode::setVariableValue(std::string *val) {
+    _variableValue = *val;
+}
+
 STNode* STNode::parameterList() {
     return _parameterList;
 }

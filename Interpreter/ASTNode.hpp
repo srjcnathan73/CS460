@@ -28,6 +28,7 @@ public:
     std::string& value() { return _token; }
     std::string& type() { return _type; }
     std::string& label() { return _label; }
+    STNode *stNode() { return _stNode; }
     int& lineNumber() { return _lineNumber; }
     int& scope() { return _scope; }
 

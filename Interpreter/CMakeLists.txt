@@ -19,4 +19,6 @@ add_executable(Interpreter main.cpp
         SymbolTable.cpp
         SymbolTable.hpp
         ASTNode.hpp
+        Execute.cpp
+        Execute.hpp
 )

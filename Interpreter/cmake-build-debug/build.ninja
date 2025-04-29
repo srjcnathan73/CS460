@@ -91,6 +91,12 @@ build CMakeFiles/Interpreter.dir/SymbolTable.cpp.obj: CXX_COMPILER__Interpreter_
   OBJECT_DIR = CMakeFiles\Interpreter.dir
   OBJECT_FILE_DIR = CMakeFiles\Interpreter.dir
 
+build CMakeFiles/Interpreter.dir/Execute.cpp.obj: CXX_COMPILER__Interpreter_unscanned_Debug C$:/Users/Nwseb/Documents/CS460/Interpreter/Execute.cpp || cmake_object_order_depends_target_Interpreter
+  DEP_FILE = CMakeFiles\Interpreter.dir\Execute.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles\Interpreter.dir
+  OBJECT_FILE_DIR = CMakeFiles\Interpreter.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Interpreter
@@ -99,7 +105,7 @@ build CMakeFiles/Interpreter.dir/SymbolTable.cpp.obj: CXX_COMPILER__Interpreter_
 #############################################
 # Link the executable Interpreter.exe
 
-build Interpreter.exe: CXX_EXECUTABLE_LINKER__Interpreter_Debug CMakeFiles/Interpreter.dir/main.cpp.obj CMakeFiles/Interpreter.dir/Token.cpp.obj CMakeFiles/Interpreter.dir/CommentRemover.cpp.obj CMakeFiles/Interpreter.dir/Tokenizer.cpp.obj CMakeFiles/Interpreter.dir/RDParser.cpp.obj CMakeFiles/Interpreter.dir/STNode.cpp.obj CMakeFiles/Interpreter.dir/SymbolTable.cpp.obj
+build Interpreter.exe: CXX_EXECUTABLE_LINKER__Interpreter_Debug CMakeFiles/Interpreter.dir/main.cpp.obj CMakeFiles/Interpreter.dir/Token.cpp.obj CMakeFiles/Interpreter.dir/CommentRemover.cpp.obj CMakeFiles/Interpreter.dir/Tokenizer.cpp.obj CMakeFiles/Interpreter.dir/RDParser.cpp.obj CMakeFiles/Interpreter.dir/STNode.cpp.obj CMakeFiles/Interpreter.dir/SymbolTable.cpp.obj CMakeFiles/Interpreter.dir/Execute.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\Interpreter.dir
