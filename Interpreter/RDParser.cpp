@@ -382,7 +382,26 @@ CSTNode* RDParser::addAssignment(CSTNode* current)
     addASTLeaf(astEntry,false);
     if(foundST->variableDataType() == "int")
     {
-        currentTemp = createIntExprPostfix(currentTemp);
+        if(currentTemp->rightSibling() && currentTemp->rightSibling()->rightSibling() && currentTemp->rightSibling()->rightSibling()->type() == "IDENTIFIER" &&
+        currentTemp->rightSibling()->rightSibling()->rightSibling() && currentTemp->rightSibling()->rightSibling()->rightSibling()->type() == "L_PAREN")
+        {
+            astEntry = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
+            addASTLeaf(astEntry,true);
+            currentTemp = currentTemp->rightSibling();
+            auto *astAssignmentOp = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
+            currentTemp = currentTemp->rightSibling();
+            while(currentTemp->type() != "SEMICOLON"){
+                foundST = determineSTNode(currentTemp);
+                astEntry = new ASTNode(currentTemp, foundST, currentTemp->value(), currentScope);
+                addASTLeaf(astEntry,true);
+                currentTemp = currentTemp->rightSibling();
+            }
+            addASTLeaf(astAssignmentOp,true);
+        }
+        else
+        {
+            currentTemp = createIntExprPostfix(currentTemp);
+        }
     }
     else if(foundST->variableDataType() == "bool")
     {
@@ -917,6 +936,14 @@ STNode* RDParser::determineSTNode(CSTNode* current)
     {
         if((cur->identifierName() == current->value() && cur->scope() == currentScope)||(cur->identifierName() == current->value() && cur->scope() == 0)||(cur->identifierName() == current->value() && (cur->identifierType() == "function"||cur->identifierType() == "procedure")))
             return cur;
+        else if(cur->identifierType() == "function"||cur->identifierType() == "procedure")
+        {
+            for(auto cur2 = cur->parameterList(); cur2; cur2 = cur2->next() )
+            {
+                if((cur2->identifierName() == current->value() && cur2->scope() == currentScope)||(cur2->identifierName() == current->value() && cur2->scope() == 0)||(cur2->identifierName() == current->value() && (cur2->identifierType() == "function"||cur2->identifierType() == "procedure")))
+                    return cur2;
+            }
+        }
     }
     return nullptr;
 }

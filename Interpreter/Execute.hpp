@@ -13,7 +13,7 @@
 class Execute {
 public:
     Execute(ASTNode *rootAST, STNode *headST, std::string *fileName);
-    ASTNode* getMain();
+    ASTNode* getFunctionOrProcedure(const std::string& funcName);
     ASTNode* beginForLoop();
     ASTNode* executeFunctionOrProcedure(ASTNode* current);
     void executeBlock();
@@ -21,6 +21,7 @@ public:
     void assignChar();
     void executeAssignment();
     void executeIfStatement();
+    void executeLoopStatement();
     void printAndF();
     int evaluatePostfixInt(ASTNode* current);
     bool evaluatePostfixBool(ASTNode* current);
@@ -31,8 +32,12 @@ private:
     std::stack<ASTNode*> executionStack;
     int currentScope = 0;
     int scopeCount = 0;
+    int ifCount = 0;
     std::string _fileName;
+    std::string currentReturnVal;
     bool ifConditionMet = false;
+    bool insideIf = false;
+    bool insideLoop = false;
 };
 
 

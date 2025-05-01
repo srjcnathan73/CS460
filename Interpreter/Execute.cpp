@@ -10,7 +10,8 @@ Execute::Execute(ASTNode *rootAST, STNode *headST, std::string *fileName)
     _fileName = *fileName;
     _rootAST = rootAST;
     _headST = headST;
-    _currentAST = getMain();
+    std::string mainName = "main";
+    _currentAST = getFunctionOrProcedure(mainName);
     if (_currentAST)
     {
         _currentST = _currentAST->stNode();
@@ -28,7 +29,18 @@ void Execute::executeBlock()
 {
     if(_currentAST->label() == "END BLOCK")
     {
-        executionStack.pop();
+        if((_currentAST->leftChild() != nullptr && _currentAST->scope() != _currentAST->leftChild()->scope())||((insideLoop && !insideIf && ifCount == 0)&&((executionStack.top()->label() == "FOR EXPRESSION 2")||(executionStack.top()->label() == "ASSIGNMENT")||(executionStack.top()->label() == "WHILE"))))
+        {
+            _currentAST = executionStack.top();
+        }
+        else
+        {
+            if(insideLoop && insideIf)
+                insideIf = false;
+            if(ifCount > 0)
+                ifCount--;
+            executionStack.pop();
+        }
     }
     if(_currentAST->label() == "ASSIGNMENT")
     {
@@ -42,19 +54,25 @@ void Execute::executeBlock()
     {
         _currentAST = beginForLoop();
     }
+    if(_currentAST->label() == "FOR EXPRESSION 2")
+    {
+        executeLoopStatement();
+    }
+    if(_currentAST->label() == "WHILE")
+    {
+        executeLoopStatement();
+    }
+    if(_currentAST->label() == "FOR EXPRESSION 3")
+    {
+        executeAssignment();
+    }
+    if(_currentAST->label() == "RETURN")
+    {
+        currentReturnVal = _currentAST->rightSibling()->stNode()->variableValue();
+    }
     if(_currentAST->label() == "IF")
     {
-        _currentAST = _currentAST->rightSibling();
-        ifConditionMet = evaluatePostfixBool(_currentAST);
-        if(ifConditionMet)
-        {
-
-            executionStack.push(_currentAST);
-        }
-        else
-        {
-            skipBlock();
-        }
+        executeIfStatement();
     }
     if(_currentAST->label() == "ELSE")
     {
@@ -63,7 +81,12 @@ void Execute::executeBlock()
         {
             skipBlock();
         }
-        executionStack.push(_currentAST);
+        else
+        {
+            executionStack.push(_currentAST);
+            insideIf = true;
+            ifCount++;
+        }
     }
     if(_currentAST->label() == "PRINTF")
     {
@@ -107,7 +130,7 @@ void Execute::skipBlock()
     }
 }
 
-ASTNode *Execute::getMain()
+ASTNode *Execute::getFunctionOrProcedure(const std::string& funcName)
 {
     if (!_rootAST) return nullptr;
     std::queue<ASTNode*> queue;
@@ -115,7 +138,7 @@ ASTNode *Execute::getMain()
     while (!queue.empty()) {
         ASTNode* current = queue.front();
         queue.pop();
-        if(current->label() == "DECLARATION" && current->value() == "main")
+        if(current->label() == "DECLARATION" && current->value() == funcName)
         {
             return current;
         }
@@ -132,7 +155,6 @@ ASTNode *Execute::getMain()
 ASTNode *Execute::beginForLoop()
 {
     int i = 0;
-    int curlyBraces = 0;
     std::string iString = std::to_string(i);
     STNode* stNodeI = _currentAST->stNode();
     //Initialize "FOR EXPRESSION 1"
@@ -143,7 +165,6 @@ ASTNode *Execute::beginForLoop()
         _currentAST = _currentAST->rightSibling();
     }
     _currentAST = _currentAST->leftChild();
-    executionStack.push(_currentAST);
     return _currentAST;
 }
 
@@ -162,8 +183,24 @@ ASTNode *Execute::executeFunctionOrProcedure(ASTNode* current)
         {
             while (currentTemp->rightSibling() && currentTemp->type() != "R_PAREN")
             {
-                tempValue = currentTemp->stNode()->variableValue();
-                currentST->setVariableValue(&tempValue);
+                if(currentTemp->stNode() && currentTemp->stNode()->variableIsArray())
+                {
+                    int arrayIndex;
+                    tempValue = currentTemp->stNode()->variableValue();
+                    while (currentTemp->rightSibling() && currentTemp->type() != "R_BRACKET")
+                    {
+                        if(currentTemp->type() == "INTEGER")
+                            arrayIndex = stoi(currentTemp->value());
+                        currentTemp = currentTemp->rightSibling();
+                    }
+                    tempValue = tempValue[arrayIndex];
+                    currentST->setVariableValue(&tempValue);
+                }
+                else if(currentTemp->stNode())
+                {
+                    tempValue = currentTemp->stNode()->variableValue();
+                    currentST->setVariableValue(&tempValue);
+                }
                 currentTemp = currentTemp->rightSibling();
             }
         }
@@ -180,10 +217,42 @@ void Execute::executeAssignment()
     if(currentTemp->stNode()->variableDataType() == "int")
     {
         currentTemp = currentTemp->rightSibling();
-        if(currentTemp->type() != "IDENTIFIER" || (currentTemp->type() == "IDENTIFIER" && currentTemp->stNode()->identifierType() != "function" && currentTemp->stNode()->identifierType() != "procedure"))
+        if(currentTemp->type() != "IDENTIFIER" || (currentTemp->type() == "IDENTIFIER" && currentTemp->stNode()->identifierType() != "function" &&
+        currentTemp->stNode()->identifierType() != "procedure" && !currentTemp->stNode()->variableIsArray()))
         {
             tempValue = std::to_string(evaluatePostfixInt(currentTemp));
             _currentAST->stNode()->setVariableValue(&tempValue);
+        }
+        else if(currentTemp->type() == "IDENTIFIER" && currentTemp->stNode()->identifierType() != "function" &&
+        currentTemp->stNode()->identifierType() != "procedure" && currentTemp->stNode()->variableIsArray())
+        {
+            ASTNode* arrayTemp = currentTemp;
+            currentTemp = currentTemp->rightSibling();
+            currentTemp = currentTemp->rightSibling();
+            std::string stringTemp = arrayTemp->stNode()->variableValue();
+            tempValue = currentTemp->stNode()->variableValue();
+            _currentAST->stNode()->setVariableValue(reinterpret_cast<std::string *>(&stringTemp[stoi(tempValue)]));
+        }
+        else if(currentTemp->type() == "IDENTIFIER" && currentTemp->stNode()->identifierType() == "function")
+        {
+            if(executionStack.top()->label() != _currentAST->label())
+            {
+                executionStack.push(_currentAST);
+                tempValue = currentTemp->label();
+                executeFunctionOrProcedure(currentTemp);
+                _currentAST = getFunctionOrProcedure(tempValue);
+            }else{
+                currentTemp->stNode()->setVariableValue(&currentReturnVal);
+            }
+
+            if(currentTemp->stNode()->variableValue().size() != 0)
+            {
+                tempValue = currentTemp->stNode()->variableValue();
+                _currentAST->stNode()->setVariableValue(&currentReturnVal);
+                _currentAST = currentTemp->rightSibling();
+                if(executionStack.top()->label() == "ASSIGNMENT")
+                    executionStack.pop();
+            }
         }
     }
     else if(currentTemp->stNode()->variableDataType() == "char")
@@ -201,7 +270,45 @@ void Execute::executeAssignment()
 
 void Execute::executeIfStatement()
 {
+    _currentAST = _currentAST->rightSibling();
+    ifConditionMet = evaluatePostfixBool(_currentAST);
+    if(ifConditionMet)
+    {
+        executionStack.push(_currentAST);
+        insideIf = true;
+        ifCount++;
+    }
+    else
+    {
+        skipBlock();
+        insideIf = false;
+        ifCount--;
+    }
+}
 
+void Execute::executeLoopStatement()
+{
+    ASTNode* currentTemp = _currentAST;
+    ASTNode* forStateTemp = _currentAST;
+    currentTemp = currentTemp->rightSibling();
+    ifConditionMet = evaluatePostfixBool(currentTemp);
+    if(ifConditionMet)
+    {
+        if(executionStack.top()->label() != forStateTemp->label())
+            executionStack.push(forStateTemp);
+        insideLoop = true;
+    }
+    else
+    {
+        currentTemp = _currentAST;
+        while(currentTemp->rightSibling()){
+            currentTemp = currentTemp->rightSibling();
+        }
+        currentTemp = currentTemp->leftChild();
+        _currentAST = currentTemp;
+        skipBlock();
+        insideLoop = false;
+    }
 }
 
 void Execute::printAndF()
@@ -276,14 +383,23 @@ int Execute::evaluatePostfixInt(ASTNode* current)
         {
             intStack.push(stoi(val));
         }
+        else if (val.size() == 1 && val != "'" && val != "+" && val != "-" && val != "*" && val != "/" && val != "%")
+        {
+            char ch = val[0];
+            intStack.push(static_cast<int>(ch));
+        }
 
             // Otherwise, it must be an operator
-        else
+        else if (val != "'")
         {
-            int val1 = intStack.top();
-            intStack.pop();
-            int val2 = intStack.top();
-            intStack.pop();
+            int val1,val2;
+            if(intStack.size() > 1)
+            {
+                val1 = intStack.top();
+                intStack.pop();
+                val2 = intStack.top();
+                intStack.pop();
+            }
 
             if (val == "+")
             {
@@ -297,6 +413,9 @@ int Execute::evaluatePostfixInt(ASTNode* current)
             } else if (val == "/")
             {
                 intStack.push(val2 / val1);
+            }else if (val == "%")
+            {
+                intStack.push(val2 % val1);
             }
         }
         currentTemp = currentTemp->rightSibling();
@@ -309,6 +428,7 @@ bool Execute::evaluatePostfixBool(ASTNode* current)
     std::stack<int> intStack;
     std::stack<bool> boolStack;
     ASTNode* currentTemp = current;
+    ASTNode* previousTemp;
     std::string val;
     while (currentTemp)
     {
@@ -329,17 +449,26 @@ bool Execute::evaluatePostfixBool(ASTNode* current)
         {
             boolStack.push(false);
         }
+        else if (val.size() == 1 && val != "'" && val != "<" && val != ">")
+        {
+            char ch = val[0];
+            intStack.push(static_cast<int>(ch));
+        }
 
             // Otherwise, it must be an operator
-        else
+        else if (val != "'")
         {
-            int val1 = intStack.top();
-            intStack.pop();
-            int val2 = intStack.top();
-            intStack.pop();
+            int val1,val2;
+            if(intStack.size() > 1)
+            {
+                val1 = intStack.top();
+                intStack.pop();
+                val2 = intStack.top();
+                intStack.pop();
+            }
             bool bool1;
             int bool2;
-            if(!boolStack.empty())
+            if(boolStack.size() > 1)
             {
                 bool1 = boolStack.top();
                 boolStack.pop();
@@ -350,24 +479,36 @@ bool Execute::evaluatePostfixBool(ASTNode* current)
             if (val == ">")
             {
                 boolStack.push(val2 > val1);
-            } else if (val == "<")
+            }
+            else if (val == "<")
             {
                 boolStack.push(val2 < val1);
-            } else if (val == "<=")
+            }
+            else if (val == "<=")
             {
                 boolStack.push(val2 <= val1);
-            } else if (val == ">=")
+            }
+            else if (val == ">=")
             {
-                boolStack.push(val2 < val1);
-            } else if (val == "&&")
+                boolStack.push(val2 >= val1);
+            }
+            else if (val == "==")
+            {
+                boolStack.push(val2 == val1);
+            }
+            else if (val == "&&")
             {
                 boolStack.push(bool2 && bool1);
-            } else if (val == "||")
+            }
+            else if (val == "||")
             {
                 boolStack.push(bool2 || bool1);
             }
         }
+        previousTemp = currentTemp;
         currentTemp = currentTemp->rightSibling();
     }
+    if(previousTemp->leftChild())
+        _currentAST = previousTemp->leftChild();
     return boolStack.top();
 }
