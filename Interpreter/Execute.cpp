@@ -62,10 +62,6 @@ void Execute::executeBlock()
     {
         executeLoopStatement();
     }
-    if(_currentAST->label() == "FOR EXPRESSION 3")
-    {
-        executeAssignment();
-    }
     if(_currentAST->label() == "RETURN")
     {
         currentReturnVal = _currentAST->rightSibling()->stNode()->variableValue();
@@ -157,6 +153,7 @@ ASTNode *Execute::beginForLoop()
     int i = 0;
     std::string iString = std::to_string(i);
     STNode* stNodeI = _currentAST->stNode();
+    inForLoop = true;
     //Initialize "FOR EXPRESSION 1"
     stNodeI->setVariableValue(&iString);
     //Move to "FOR EXPRESSION 2"
@@ -165,6 +162,18 @@ ASTNode *Execute::beginForLoop()
         _currentAST = _currentAST->rightSibling();
     }
     _currentAST = _currentAST->leftChild();
+    executionStack.push(_currentAST);
+    insideLoop = true;
+    //Move to "FOR EXPRESSION 3"
+    while(_currentAST->rightSibling())
+    {
+        _currentAST = _currentAST->rightSibling();
+    }
+    _currentAST = _currentAST->leftChild();
+    while(_currentAST->rightSibling())
+    {
+        _currentAST = _currentAST->rightSibling();
+    }
     return _currentAST;
 }
 
@@ -181,7 +190,7 @@ ASTNode *Execute::executeFunctionOrProcedure(ASTNode* current)
     {
         if(currentTemp->type() == "L_PAREN")
         {
-            while (currentTemp->rightSibling() && currentTemp->type() != "R_PAREN")
+            while (currentTemp->rightSibling()->rightSibling() && currentTemp->type() != "R_PAREN")
             {
                 if(currentTemp->stNode() && currentTemp->stNode()->variableIsArray())
                 {
@@ -189,8 +198,8 @@ ASTNode *Execute::executeFunctionOrProcedure(ASTNode* current)
                     tempValue = currentTemp->stNode()->variableValue();
                     while (currentTemp->rightSibling() && currentTemp->type() != "R_BRACKET")
                     {
-                        if(currentTemp->type() == "INTEGER")
-                            arrayIndex = stoi(currentTemp->value());
+                        if(currentTemp->stNode() && currentTemp->stNode()->variableDataType() == "int")
+                            arrayIndex = stoi(currentTemp->stNode()->variableValue());
                         currentTemp = currentTemp->rightSibling();
                     }
                     tempValue = tempValue[arrayIndex];
@@ -241,17 +250,18 @@ void Execute::executeAssignment()
                 tempValue = currentTemp->label();
                 executeFunctionOrProcedure(currentTemp);
                 _currentAST = getFunctionOrProcedure(tempValue);
-            }else{
-                currentTemp->stNode()->setVariableValue(&currentReturnVal);
             }
-
-            if(currentTemp->stNode()->variableValue().size() != 0)
+            else if(currentTemp->stNode()->variableValue().size() != 0)
             {
                 tempValue = currentTemp->stNode()->variableValue();
                 _currentAST->stNode()->setVariableValue(&currentReturnVal);
                 _currentAST = currentTemp->rightSibling();
                 if(executionStack.top()->label() == "ASSIGNMENT")
                     executionStack.pop();
+            }
+            else
+            {
+                currentTemp->stNode()->setVariableValue(&currentReturnVal);
             }
         }
     }
@@ -291,6 +301,12 @@ void Execute::executeLoopStatement()
     ASTNode* currentTemp = _currentAST;
     ASTNode* forStateTemp = _currentAST;
     currentTemp = currentTemp->rightSibling();
+    if(inForLoop && currentTemp->type() == "IDENTIFIER" && currentTemp->stNode()->variableDataType() == "int")
+    {
+        int currentInt = stoi(currentTemp->stNode()->variableValue());
+        std::string newInt = std::to_string(currentInt + 1);
+        currentTemp->stNode()->setVariableValue(&newInt);
+    }
     ifConditionMet = evaluatePostfixBool(currentTemp);
     if(ifConditionMet)
     {
@@ -308,6 +324,7 @@ void Execute::executeLoopStatement()
         _currentAST = currentTemp;
         skipBlock();
         insideLoop = false;
+        inForLoop = false;
     }
 }
 

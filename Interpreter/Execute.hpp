@@ -38,6 +38,7 @@ private:
     bool ifConditionMet = false;
     bool insideIf = false;
     bool insideLoop = false;
+    bool inForLoop = false;
 };
 
 
