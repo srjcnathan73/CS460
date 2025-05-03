@@ -23,6 +23,7 @@ public:
     void executeIfStatement();
     void executeLoopStatement();
     void printAndF();
+    void printAndFnew();
     int evaluatePostfixInt(ASTNode* current);
     bool evaluatePostfixBool(ASTNode* current);
 
@@ -35,6 +36,7 @@ private:
     int ifCount = 0;
     std::string _fileName;
     std::string currentReturnVal;
+    std::string currentFunctionOrProcedure;
     bool ifConditionMet = false;
     bool insideIf = false;
     bool insideLoop = false;

@@ -15,7 +15,7 @@ Execute::Execute(ASTNode *rootAST, STNode *headST, std::string *fileName)
     if (_currentAST)
     {
         _currentST = _currentAST->stNode();
-        std::cout << _currentAST->label() << "  " << _currentAST->value() << std::endl;
+        std::cout << "  "  << std::endl;
         executionStack.push(_currentAST);
         _currentAST = _currentAST->leftChild();
         while(!executionStack.empty())
@@ -29,8 +29,10 @@ void Execute::executeBlock()
 {
     if(_currentAST->label() == "END BLOCK")
     {
-        if((_currentAST->leftChild() != nullptr && _currentAST->scope() != _currentAST->leftChild()->scope())||((insideLoop && !insideIf && ifCount == 0)&&((executionStack.top()->label() == "FOR EXPRESSION 2")||(executionStack.top()->label() == "ASSIGNMENT")||(executionStack.top()->label() == "WHILE"))))
+        if((_currentAST->leftChild() != nullptr && _currentAST->scope() != _currentAST->leftChild()->scope())||((insideLoop && !insideIf && ifCount <= 0)&&((executionStack.top()->label() == "FOR EXPRESSION 2")||(executionStack.top()->label() == "ASSIGNMENT")||(executionStack.top()->label() == "WHILE"))))
         {
+            if(ifCount < 0)
+                ifCount = 0;
             _currentAST = executionStack.top();
         }
         else
@@ -49,6 +51,7 @@ void Execute::executeBlock()
     if(_currentAST->label() == "CALL" && (_currentAST->stNode()->identifierType() == "procedure" || _currentAST->stNode()->identifierType() == "function"))
     {
         _currentAST = executeFunctionOrProcedure(_currentAST);
+        _currentAST = getFunctionOrProcedure(currentFunctionOrProcedure);
     }
     if(_currentAST->label() == "FOR EXPRESSION 1")
     {
@@ -86,7 +89,7 @@ void Execute::executeBlock()
     }
     if(_currentAST->label() == "PRINTF")
     {
-        printAndF();
+        printAndFnew();
     }
     if (_currentAST->leftChild()) {
         _currentAST = _currentAST->leftChild();
@@ -179,6 +182,18 @@ ASTNode *Execute::beginForLoop()
 
 ASTNode *Execute::executeFunctionOrProcedure(ASTNode* current)
 {
+    if(executionStack.top()->label() != _currentAST->label())
+    {
+        _currentAST = _currentAST->rightSibling();
+        executionStack.push(_currentAST);
+        currentFunctionOrProcedure = _currentAST->value();
+    }
+    else if (currentFunctionOrProcedure == _currentAST->value())
+    {
+        executionStack.pop();
+        return _currentAST->rightSibling();
+    }
+
     if(!current->stNode()->parameterList() && current->leftChild())
     {
         return current->leftChild();
@@ -190,7 +205,7 @@ ASTNode *Execute::executeFunctionOrProcedure(ASTNode* current)
     {
         if(currentTemp->type() == "L_PAREN")
         {
-            while (currentTemp->rightSibling()->rightSibling() && currentTemp->type() != "R_PAREN")
+            while (currentTemp->rightSibling() && currentTemp->type() != "R_PAREN")
             {
                 if(currentTemp->stNode() && currentTemp->stNode()->variableIsArray())
                 {
@@ -213,7 +228,8 @@ ASTNode *Execute::executeFunctionOrProcedure(ASTNode* current)
                 currentTemp = currentTemp->rightSibling();
             }
         }
-        currentTemp = currentTemp->rightSibling();
+        if(currentTemp->rightSibling())
+            currentTemp = currentTemp->rightSibling();
     }
     return currentTemp;
 }
@@ -296,7 +312,6 @@ void Execute::executeIfStatement()
     {
         skipBlock();
         insideIf = false;
-        ifCount--;
     }
 }
 
@@ -324,7 +339,8 @@ void Execute::executeLoopStatement()
         while(currentTemp->rightSibling()){
             currentTemp = currentTemp->rightSibling();
         }
-        currentTemp = currentTemp->leftChild();
+        if(currentTemp->type() != "L_BRACE")
+            currentTemp = currentTemp->leftChild();
         _currentAST = currentTemp;
         skipBlock();
         insideLoop = false;
@@ -380,6 +396,76 @@ void Execute::printAndF()
     char *cstr1 = arr;
     char *cstr2 = arr2;
     std::printf(cstr1, cstr2, tempInt);
+}
+
+void Execute::printAndFnew()
+{
+    ASTNode* currentTemp = _currentAST;
+    std::vector<ASTNode*> args;
+    currentTemp = currentTemp->rightSibling();
+    std::string tempValue;
+    std::string tempString;
+    int tempInt1;
+    int tempInt2;
+    while (currentTemp && currentTemp->type() != "R_PAREN")
+    {
+        if(currentTemp->type() == "STRING")
+        {
+            args.push_back(currentTemp);
+        }
+        else if(currentTemp->type() == "IDENTIFIER")
+        {
+            args.push_back(currentTemp);
+        }
+        currentTemp = currentTemp->rightSibling();
+    }
+    tempValue = args[0]->value();
+    size_t n = tempValue.size();
+    char arr[n+1];
+    for(size_t i=0; i<(n+1);i++)
+    {
+        if(tempValue[i] == '\\' && tempValue[i+1] == 'n')
+        {
+            tempValue[i]='\n';
+            tempValue[i+1]=' ';
+        }
+        arr[i]=tempValue[i];
+    }
+    char *cstr1 = arr;
+    char *cstr2;
+    if(args.size() == 3 && args.at(1)->stNode()->variableDataType() == "int" && args.at(2)->stNode()->variableDataType() == "int")
+    {
+        tempInt1 = stoi(args.at(1)->stNode()->variableValue());
+        tempInt2 = stoi(args.at(2)->stNode()->variableValue());
+        std::printf(cstr1, tempInt1, tempInt2);
+    }
+    else if(args.size() == 3 && args.at(1)->stNode()->variableDataType() == "char" && args.at(2)->stNode()->variableDataType() == "int")
+    {
+        tempString = args.at(1)->stNode()->variableValue();
+        size_t n2 = tempString.size();
+        char arr2[n2+1];
+        for(size_t i=0; i<(n2+1);i++)
+        {
+            if(tempString[i] == '\\' && tempString[i+1] == 'x')
+            {
+                tempString[i]='\x0';
+                tempString[i+1]=' ';
+            }
+            arr2[i]=tempString[i];
+        }
+        cstr2 = arr2;
+        tempInt2 = stoi(args.at(2)->stNode()->variableValue());
+        std::printf(cstr1, cstr2, tempInt2);
+    }
+    else if(args.size() == 2 && args.at(1)->stNode()->variableDataType() == "int")
+    {
+        tempInt1 = stoi(args.at(1)->stNode()->variableValue());
+        std::printf(cstr1, tempInt1);
+    }
+    else if(args.size() == 1)
+    {
+        std::printf(cstr1);
+    }
 }
 
 void Execute::assignChar()
@@ -470,7 +556,7 @@ bool Execute::evaluatePostfixBool(ASTNode* current)
         {
             boolStack.push(false);
         }
-        else if (val.size() == 1 && val != "'" && val != "<" && val != ">")
+        else if (val.size() == 1 && val != "'" && val != "<" && val != ">" && val != "%")
         {
             char ch = val[0];
             intStack.push(static_cast<int>(ch));
@@ -497,6 +583,10 @@ bool Execute::evaluatePostfixBool(ASTNode* current)
                 boolStack.pop();
             }
 
+            if (val == "%")
+            {
+                intStack.push(val2 % val1);
+            }
             if (val == ">")
             {
                 boolStack.push(val2 > val1);
