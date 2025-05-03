@@ -259,6 +259,10 @@ void Execute::executeAssignment()
                 if(executionStack.top()->label() == "ASSIGNMENT")
                     executionStack.pop();
             }
+            else if(!inForLoop)
+            {
+                _currentAST->stNode()->setVariableValue(&currentReturnVal);
+            }
             else
             {
                 currentTemp->stNode()->setVariableValue(&currentReturnVal);
