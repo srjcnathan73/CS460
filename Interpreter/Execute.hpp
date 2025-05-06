@@ -23,7 +23,6 @@ public:
     void executeIfStatement();
     void executeLoopStatement();
     void printAndF();
-    void printAndFnew();
     int evaluatePostfixInt(ASTNode* current);
     bool evaluatePostfixBool(ASTNode* current);
 

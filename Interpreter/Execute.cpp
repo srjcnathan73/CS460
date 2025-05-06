@@ -89,7 +89,7 @@ void Execute::executeBlock()
     }
     if(_currentAST->label() == "PRINTF")
     {
-        printAndFnew();
+        printAndF();
     }
     if (_currentAST->leftChild()) {
         _currentAST = _currentAST->leftChild();
@@ -149,6 +149,7 @@ ASTNode *Execute::getFunctionOrProcedure(const std::string& funcName)
             queue.push(current->rightSibling());
         }
     }
+    return nullptr;
 }
 
 ASTNode *Execute::beginForLoop()
@@ -351,56 +352,6 @@ void Execute::executeLoopStatement()
 void Execute::printAndF()
 {
     ASTNode* currentTemp = _currentAST;
-    currentTemp = currentTemp->rightSibling();
-    std::string tempValue;
-    std::string tempString;
-    int tempInt;
-    while (currentTemp && currentTemp->type() != "R_PAREN")
-    {
-        if(currentTemp->type() == "IDENTIFIER" && currentTemp->stNode()->variableDataType() == "int")
-        {
-            tempInt = stoi(currentTemp->stNode()->variableValue());
-        }
-        else if(currentTemp->type() == "IDENTIFIER" && currentTemp->stNode()->variableDataType() == "char")
-        {
-            tempString = currentTemp->stNode()->variableValue();
-        }
-        else if(currentTemp->type() == "STRING")
-        {
-            tempValue = currentTemp->value();
-        }
-        currentTemp = currentTemp->rightSibling();
-    }
-    size_t n = tempValue.size();
-    char arr[n+1];
-    for(size_t i=0; i<(n+1);i++)
-    {
-        if(tempValue[i] == '\\' && tempValue[i+1] == 'n')
-        {
-            tempValue[i]='\n';
-            tempValue[i+1]=' ';
-        }
-        arr[i]=tempValue[i];
-    }
-    size_t n2 = tempString.size();
-    char arr2[n2+1];
-    for(size_t i=0; i<(n2+1);i++)
-    {
-        if(tempString[i] == '\\' && tempString[i+1] == 'x')
-        {
-            tempString[i]='\x0';
-            tempString[i+1]=' ';
-        }
-        arr2[i]=tempString[i];
-    }
-    char *cstr1 = arr;
-    char *cstr2 = arr2;
-    std::printf(cstr1, cstr2, tempInt);
-}
-
-void Execute::printAndFnew()
-{
-    ASTNode* currentTemp = _currentAST;
     std::vector<ASTNode*> args;
     currentTemp = currentTemp->rightSibling();
     std::string tempValue;
@@ -409,11 +360,7 @@ void Execute::printAndFnew()
     int tempInt2;
     while (currentTemp && currentTemp->type() != "R_PAREN")
     {
-        if(currentTemp->type() == "STRING")
-        {
-            args.push_back(currentTemp);
-        }
-        else if(currentTemp->type() == "IDENTIFIER")
+        if(currentTemp->type() == "STRING" || currentTemp->type() == "IDENTIFIER")
         {
             args.push_back(currentTemp);
         }
@@ -464,7 +411,7 @@ void Execute::printAndFnew()
     }
     else if(args.size() == 1)
     {
-        std::printf(cstr1);
+        std::printf("%s", cstr1);
     }
 }
 
