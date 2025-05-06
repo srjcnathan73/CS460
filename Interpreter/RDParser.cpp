@@ -28,7 +28,7 @@ RDParser::RDParser(std::vector<char> *fileBuffer, std::string *fileName)
     createAST();
     Execute execute(rootAST,rootST,&_fileName);
     //breadthFirstASTPrint();
-    breadthFirstASTFilePrint(_fileName);
+    //breadthFirstASTFilePrint(_fileName);
     //breadthFirstCSTFilePrint(_fileName);
     //symbolTable.print();
     //SymbolTable.outputToFile(_fileName);
