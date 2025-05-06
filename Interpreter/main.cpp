@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     //commentRemover.printCommentFreeFile();
     std::vector<char>* fileBuffer = commentRemover.getFileBuffer();
     std::string fileName = argv[argc - 1];
-    RDParser RCParser(fileBuffer, &fileName);
+    RDParser RDParser(fileBuffer, &fileName);
     //RDParser.breadthFirstPrint();
     //RDParser.breadthFirstFilePrint(argv[argc - 1]);
     return 0;
